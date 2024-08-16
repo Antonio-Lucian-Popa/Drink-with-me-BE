@@ -1,5 +1,9 @@
 package com.asusoftware.Drink_with_me.post_api.service;
 
+import com.asusoftware.Drink_with_me.notification_api.model.NotificationType;
+import com.asusoftware.Drink_with_me.notification_api.service.NotificationService;
+import com.asusoftware.Drink_with_me.post_api.exception.PostNotFoundException;
+import com.asusoftware.Drink_with_me.post_api.exception.StorageException;
 import com.asusoftware.Drink_with_me.post_api.model.Post;
 import com.asusoftware.Drink_with_me.post_api.model.dto.CreatePostDto;
 import com.asusoftware.Drink_with_me.post_api.model.dto.PostDto;
@@ -7,6 +11,7 @@ import com.asusoftware.Drink_with_me.post_api.model.dto.PostImageDto;
 import com.asusoftware.Drink_with_me.post_api.model.dto.UserPostDto;
 import com.asusoftware.Drink_with_me.post_api.repository.PostRepository;
 import com.asusoftware.Drink_with_me.user_api.model.User;
+import com.asusoftware.Drink_with_me.user_api.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.Data;
@@ -17,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -3,6 +3,7 @@ package com.asusoftware.Drink_with_me.user_api.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -36,6 +37,13 @@ public class User {
     @Column(name = "profile_image")
     private String profileImage;
 
+    @Column(name = "birthday", nullable = false)
+    private Date birthday;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "gender")
+    private Gender gender;
+
     @Column(name = "lives_in")
     private String livesIn;
 
@@ -44,4 +52,17 @@ public class User {
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
     private Set<UserRole> roles = new HashSet<>();
+
+    // Relationship with follower users
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_followers",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "follower_id")
+    )
+    private Set<User> followers = new HashSet<>();
+
+    // Relationship with following users
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "followers")
+    private Set<User> following = new HashSet<>();
 }

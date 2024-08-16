@@ -1,12 +1,21 @@
 package com.asusoftware.Drink_with_me.user_api.service;
 
+import com.asusoftware.Drink_with_me.exception.FileStorageException;
+import com.asusoftware.Drink_with_me.notification_api.model.NotificationType;
+import com.asusoftware.Drink_with_me.notification_api.service.NotificationService;
 import com.asusoftware.Drink_with_me.post_api.repository.PostRepository;
+import com.asusoftware.Drink_with_me.user_api.exception.ImageNotFoundException;
+import com.asusoftware.Drink_with_me.user_api.exception.UserNotFoundException;
 import com.asusoftware.Drink_with_me.user_api.model.User;
+import com.asusoftware.Drink_with_me.user_api.model.dto.UpdateUserProfileDto;
+import com.asusoftware.Drink_with_me.user_api.model.dto.UserDto;
+import com.asusoftware.Drink_with_me.user_api.model.dto.UserProfileDto;
 import com.asusoftware.Drink_with_me.user_api.repository.UserRepository;
-import jakarta.annotation.Resource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.UrlResource;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -18,9 +27,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 @Service
 @Data
@@ -58,7 +70,6 @@ public class UserService {
         userProfileDto.setProfileImageUrl(profileImageUrl);
         totalUserPosts = postRepository.countPostsByUserId(id);
         userProfileDto.setTotalPosts(totalUserPosts);
-        userProfileDto.setUserNew(user.isUserNew());
 
 
         return userProfileDto;
@@ -199,10 +210,7 @@ public class UserService {
         findedUserRepo.setEmail(updatedUserDto.getEmail());
         findedUserRepo.setBirthday(updatedUserDto.getBirthday());
         findedUserRepo.setGender(updatedUserDto.getGender());
-        findedUserRepo.setBio(updatedUserDto.getBio());
-        findedUserRepo.setInterests(updatedUserDto.getInterests());
         findedUserRepo.setLivesIn(updatedUserDto.getLivesIn());
-        findedUserRepo.setUserNew(false);
 
         userRepository.save(findedUserRepo);
 

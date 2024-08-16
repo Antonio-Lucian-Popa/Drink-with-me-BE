@@ -1,4 +1,4 @@
-package com.asusoftware.Drink_with_me.user_api.exception;
+package com.asusoftware.Drink_with_me.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
