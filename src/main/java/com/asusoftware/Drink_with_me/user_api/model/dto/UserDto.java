@@ -12,6 +12,7 @@ public class UserDto {
     private String lastName;
     private String profileImageUrl;
     private String email;
+    private String password;
     private String occupation;
 
     public static UserDto toDto(User user) {
