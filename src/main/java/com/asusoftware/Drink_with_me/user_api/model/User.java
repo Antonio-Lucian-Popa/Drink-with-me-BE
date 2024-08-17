@@ -47,11 +47,9 @@ public class User {
     @Column(name = "lives_in")
     private String livesIn;
 
-    @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private Set<UserRole> roles = new HashSet<>();
+    private UserRole role;
 
     // Relationship with follower users
     @ManyToMany(fetch = FetchType.LAZY)

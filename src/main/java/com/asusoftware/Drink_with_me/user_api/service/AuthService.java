@@ -1,13 +1,16 @@
 package com.asusoftware.Drink_with_me.user_api.service;
 
+import com.asusoftware.Drink_with_me.exception.FileStorageException;
 import com.asusoftware.Drink_with_me.security.CustomUserDetailsService;
 import com.asusoftware.Drink_with_me.security.JwtTokenUtil;
+import com.asusoftware.Drink_with_me.user_api.exception.UserNotFoundException;
 import com.asusoftware.Drink_with_me.user_api.model.User;
 import com.asusoftware.Drink_with_me.user_api.model.UserRole;
 import com.asusoftware.Drink_with_me.user_api.model.dto.AuthRequest;
 import com.asusoftware.Drink_with_me.user_api.model.dto.UserDto;
 import com.asusoftware.Drink_with_me.user_api.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -16,14 +19,24 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.UUID;
 
 @Service
 public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
@@ -40,7 +53,10 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public String registerUser(UserDto userDto) {
+    @Value("${upload.dir}")
+    private String uploadDir;
+
+    public String registerUser(UserDto userDto, MultipartFile file) {
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email is already taken!");
         }
@@ -51,12 +67,32 @@ public class AuthService {
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setOccupation(userDto.getOccupation());
-        user.setRoles(Collections.singleton(UserRole.ROLE_USER));
+        user.setRole(UserRole.ROLE_USER);
+        user.setGender(userDto.getGender());
+        user.setBirthday(userDto.getBirthday());
+        user.setEnabled(false);
 
-        userRepository.save(user);
+        var savedUser = userRepository.save(user);
+
+        if (file != null && !file.isEmpty()) {
+            userService.uploadProfileImage(
+                    file,
+                    savedUser.getId()
+            );
+        } else {
+            try {
+                User userWithProfileImage = setDefaultProfileImage(savedUser.getId());
+                userRepository.save(userWithProfileImage);
+            } catch (Exception e) {
+                // Logging the exception message
+                System.err.println("Error while saving user with default profile image: " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("Failed to save user with default profile image", e);
+            }
+        }
 
         // Generați și trimiteți token-ul de confirmare
-        String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(user.getEmail()));
+        String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(savedUser.getEmail()));
         emailService.sendConfirmationEmail(user.getEmail(), token);
 
         return "User registered successfully. Please check your email for confirmation.";
@@ -108,4 +144,45 @@ public class AuthService {
 
         return "Confirmation email resent. Please check your email.";
     }
+
+    public User setDefaultProfileImage(UUID userId) {
+        // Find the user by ID
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        String uploadPath = uploadDir + "/" + userId;
+        Path uploadDirPath = Paths.get(uploadPath);
+
+        try {
+            // Ensure the user-specific directory exists
+            if (!Files.exists(uploadDirPath)) {
+                Files.createDirectories(uploadDirPath);
+            }
+
+            // Define the default profile image path and the filename for the user-specific copy
+            Path defaultImagePath = Paths.get(uploadDir, "newUserDefaultProfileImage", "profile-image.png");
+            String fileName = "default-profile.png"; // Or generate a unique name if preferred
+
+            // Copy the default image to the user's directory
+            Path targetLocation = uploadDirPath.resolve(fileName);
+            Files.copy(defaultImagePath, targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            // If the user already has a profile image different from the default, consider deleting the old file
+            // This part is optional and depends on your application's requirements
+            if (user.getProfileImage() != null && !user.getProfileImage().equals(uploadPath + "/" + fileName)) {
+                Path oldFilePath = uploadDirPath.resolve(user.getProfileImage());
+                if (Files.exists(oldFilePath)) {
+                    Files.delete(oldFilePath); // Delete the old image
+                }
+            }
+
+            // Update the user's profile image path with the default image's path or filename
+            user.setProfileImage(fileName); // Adjust according to how you handle image paths
+            return user;
+
+        } catch (IOException e) {
+            throw new FileStorageException("Could not set default profile image for user with ID: " + userId, e);
+        }
+    }
+
 }

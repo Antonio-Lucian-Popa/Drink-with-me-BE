@@ -6,6 +6,7 @@ import com.asusoftware.Drink_with_me.user_api.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -15,8 +16,8 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
-        String response = authService.registerUser(userDto);
+    public ResponseEntity<?> registerUser(@RequestPart("userDto") UserDto userDto, @RequestPart(value = "file", required = false) MultipartFile file) {
+        String response = authService.registerUser(userDto, file);
         return ResponseEntity.ok(response);
     }
 
