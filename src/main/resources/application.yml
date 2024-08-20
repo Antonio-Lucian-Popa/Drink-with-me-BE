@@ -44,6 +44,9 @@ application:
     jwt:
       secret: ${JWT_SECRET}
       expiration-time: 86400000  # 24 hours in milliseconds
+app:
+  confirmation:
+    url: ${CONFIRMATION_URL}/api/v1/auth/confirm-account
 
 logging:
   level:

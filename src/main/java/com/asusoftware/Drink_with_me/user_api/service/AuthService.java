@@ -9,6 +9,7 @@ import com.asusoftware.Drink_with_me.user_api.model.UserRole;
 import com.asusoftware.Drink_with_me.user_api.model.dto.AuthRequest;
 import com.asusoftware.Drink_with_me.user_api.model.dto.UserDto;
 import com.asusoftware.Drink_with_me.user_api.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,46 +57,52 @@ public class AuthService {
     @Value("${upload.dir}")
     private String uploadDir;
 
+    @Transactional
     public String registerUser(UserDto userDto, MultipartFile file) {
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email is already taken!");
-        }
+        try {
+            if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email is already taken!");
+            }
 
-        User user = new User();
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setEmail(userDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        user.setOccupation(userDto.getOccupation());
-        user.setRole(UserRole.ROLE_USER);
-        user.setGender(userDto.getGender());
-        user.setBirthday(userDto.getBirthday());
-        user.setEnabled(false);
+            // Create a new user entity
+            User user = new User();
+            user.setFirstName(userDto.getFirstName());
+            user.setLastName(userDto.getLastName());
+            user.setEmail(userDto.getEmail());
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            user.setOccupation(userDto.getOccupation());
+            user.setRole(UserRole.ROLE_USER);
+            user.setGender(userDto.getGender());
+            user.setBirthday(userDto.getBirthday());
+            user.setEnabled(false);
 
-        var savedUser = userRepository.save(user);
+            // Save the user to the database
+            User savedUser = userRepository.save(user);
 
-        if (file != null && !file.isEmpty()) {
-            userService.uploadProfileImage(
-                    file,
-                    savedUser.getId()
-            );
-        } else {
-            try {
+            // Handle profile image upload
+            if (file != null && !file.isEmpty()) {
+                userService.uploadProfileImage(file, savedUser.getId());
+            } else {
                 User userWithProfileImage = setDefaultProfileImage(savedUser.getId());
                 userRepository.save(userWithProfileImage);
-            } catch (Exception e) {
-                // Logging the exception message
-                System.err.println("Error while saving user with default profile image: " + e.getMessage());
-                e.printStackTrace();
-                throw new RuntimeException("Failed to save user with default profile image", e);
             }
+
+            // Generate the confirmation token
+            String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(savedUser.getEmail()));
+
+            // Send the confirmation email
+            emailService.sendConfirmationEmail(user.getEmail(), token);
+
+            return "User registered successfully. Please check your email for confirmation.";
+
+        } catch (Exception e) {
+            // Log the exception for debugging purposes
+            System.err.println("Error during user registration: " + e.getMessage());
+            e.printStackTrace();
+
+            // Rollback the transaction in case of any failure
+            throw new RuntimeException("User registration failed. Transaction rolled back.", e);
         }
-
-        // Generați și trimiteți token-ul de confirmare
-        String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(savedUser.getEmail()));
-        emailService.sendConfirmationEmail(user.getEmail(), token);
-
-        return "User registered successfully. Please check your email for confirmation.";
     }
 
     public String confirmUserAccount(String token) {
