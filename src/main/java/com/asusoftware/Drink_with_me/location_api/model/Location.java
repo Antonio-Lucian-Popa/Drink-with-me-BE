@@ -20,7 +20,10 @@ public class Location {
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    // Other fields like latitude, longitude can also be added for more detailed location filtering
+    // Relationship with County
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "county_id", nullable = false)
+    private County county;
 
     @OneToMany(mappedBy = "location", fetch = FetchType.LAZY)
     private List<Post> posts = new ArrayList<>();

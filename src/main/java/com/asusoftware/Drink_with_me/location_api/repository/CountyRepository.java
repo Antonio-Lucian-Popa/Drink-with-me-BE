@@ -1,13 +1,11 @@
 package com.asusoftware.Drink_with_me.location_api.repository;
 
-import com.asusoftware.Drink_with_me.location_api.model.Location;
+import com.asusoftware.Drink_with_me.location_api.model.County;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface LocationRepository extends JpaRepository<Location, UUID> {
-    List<Location> findByCountyId(UUID countyId);
+public interface CountyRepository extends JpaRepository<County, UUID> {
 }

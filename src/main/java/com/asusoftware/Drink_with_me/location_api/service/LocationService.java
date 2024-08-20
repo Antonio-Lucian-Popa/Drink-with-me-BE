@@ -29,6 +29,13 @@ public class LocationService {
         return convertToDto(location);
     }
 
+    // Method to get locations by County ID
+    public List<LocationDto> getLocationsByCountyId(UUID countyId) {
+        return locationRepository.findByCountyId(countyId).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
     // Method to create a new location
     public LocationDto createLocation(LocationDto locationDto) {
         Location location = convertToEntity(locationDto);
