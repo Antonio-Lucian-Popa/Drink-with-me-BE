@@ -16,6 +16,9 @@ public class EmailService {
     @Value("${app.confirmation.url}")
     private String confirmationBaseUrl;
 
+    @Value("${app.mail.from}")
+    private String fromEmail;
+
     public void sendConfirmationEmail(String to, String token) {
         String subject = "Confirm your account";
         String confirmationUrl = confirmationBaseUrl + "?token=" + token;
@@ -25,7 +28,7 @@ public class EmailService {
         email.setTo(to);
         email.setSubject(subject);
         email.setText(message);
-        email.setFrom("your-email@gmail.com");  // Setează adresa ta de email
+        email.setFrom(fromEmail);  // Setează adresa ta de email
 
         mailSender.send(email);
     }

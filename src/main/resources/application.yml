@@ -47,6 +47,8 @@ application:
 app:
   confirmation:
     url: ${CONFIRMATION_URL}/api/v1/auth/confirm-account
+  mail:
+    from: drink.with.me.server@gmail.com
 
 logging:
   level:
