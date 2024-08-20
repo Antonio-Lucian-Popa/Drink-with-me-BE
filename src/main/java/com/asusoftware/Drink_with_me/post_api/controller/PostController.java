@@ -93,7 +93,7 @@ public class PostController {
     }
 
     @PutMapping(path = "/like/{postId}/{userId}")
-    public ResponseEntity<PostDto> likePost(@PathVariable("postId") UUID postId, @PathVariable("userId") UUID userId) {
+    public ResponseEntity<PostDto> participantAPost(@PathVariable("postId") UUID postId, @PathVariable("userId") UUID userId) {
         return ResponseEntity.ok(postService.likePost(postId, userId));
     }
 

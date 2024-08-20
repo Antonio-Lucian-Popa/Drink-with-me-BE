@@ -1,5 +1,6 @@
 package com.asusoftware.Drink_with_me.post_api.model;
 
+import com.asusoftware.Drink_with_me.location_api.model.Location;
 import com.asusoftware.Drink_with_me.user_api.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,8 +23,12 @@ public class Post {
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "description", nullable = false, length = 30)
+    @Column(name = "description", nullable = false, length = 50)
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location location;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -35,11 +40,11 @@ public class Post {
     // Relationship with post likes
     @ManyToMany
     @JoinTable(
-            name = "user_post_likes",
+            name = "user_post_participants",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private Set<User> userLikes = new HashSet<>();
+    private Set<User> participants = new HashSet<>();
 
 
     // Relationship with comments

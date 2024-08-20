@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: DRINK/master.yaml
+      relativeToChangelogFile: true

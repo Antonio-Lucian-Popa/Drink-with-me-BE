@@ -17,6 +17,11 @@ spring:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+  liquibase:
+    enabled: true
+    drop-first: false # Drops and creates scheme from scratch on every start
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
   mail:
     host: smtp.gmail.com
     port: 587

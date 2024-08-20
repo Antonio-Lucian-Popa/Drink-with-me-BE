@@ -31,7 +31,7 @@ public class User {
     @Column(name = "enabled", nullable = false)
     private Boolean enabled = false; // Account activation status
 
-    @Column(name = "ocupation", nullable = false)
+    @Column(name = "occupation", nullable = false)
     private String occupation;
 
     @Column(name = "profile_image")

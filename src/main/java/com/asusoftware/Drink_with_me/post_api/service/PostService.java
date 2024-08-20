@@ -4,11 +4,13 @@ import com.asusoftware.Drink_with_me.notification_api.model.NotificationType;
 import com.asusoftware.Drink_with_me.notification_api.service.NotificationService;
 import com.asusoftware.Drink_with_me.post_api.exception.PostNotFoundException;
 import com.asusoftware.Drink_with_me.post_api.exception.StorageException;
+import com.asusoftware.Drink_with_me.location_api.model.Location;
 import com.asusoftware.Drink_with_me.post_api.model.Post;
 import com.asusoftware.Drink_with_me.post_api.model.dto.CreatePostDto;
 import com.asusoftware.Drink_with_me.post_api.model.dto.PostDto;
 import com.asusoftware.Drink_with_me.post_api.model.dto.PostImageDto;
 import com.asusoftware.Drink_with_me.post_api.model.dto.UserPostDto;
+import com.asusoftware.Drink_with_me.location_api.repository.LocationRepository;
 import com.asusoftware.Drink_with_me.post_api.repository.PostRepository;
 import com.asusoftware.Drink_with_me.user_api.model.User;
 import com.asusoftware.Drink_with_me.user_api.service.UserService;
@@ -46,11 +48,14 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final LocationRepository locationRepository;
 
     @Transactional
     public PostDto createPostWithImages(UUID userId, CreatePostDto createPostDto, List<MultipartFile> files) {
         User user = userService.findById(userId);
         Post post = CreatePostDto.toEntity(createPostDto);
+        Location location = locationRepository.findById(createPostDto.getLocation()).orElseThrow(EntityNotFoundException::new);
+        post.setLocation(location);
         post.setUser(user);
         Post postSaved = postRepository.save(post); // This saves the post and gives it an ID
 
@@ -64,7 +69,7 @@ public class PostService {
             postSaved.setImageFilenames(filenames);
         }
         postRepository.save(postSaved); // Update the post record with image references
-        postSaved.setUserLikes(new HashSet<>());
+        postSaved.setParticipants(new HashSet<>());
         // Convert the updated Post entity to a DTO to return
         PostDto postDto = PostDto.fromEntity(postSaved);
         List<String> imageUrls = constructImageUrlsForPost(postSaved.getId());
@@ -157,11 +162,11 @@ public class PostService {
             postDto.setNumberOfComments(post.getComments().size());
             postDto.setCreatedAt(post.getCreatedAt());
 
-            List<UserPostDto> userLikesPostDtoList = postDto.getLikes().stream().peek(user -> {
+            List<UserPostDto> userLikesPostDtoList = postDto.getParticipants().stream().peek(user -> {
                 String userLikeProfileImageUrl = constructImageUrlForUser(user.getId());
                 user.setProfileImage(userLikeProfileImageUrl);
             }).toList();
-            postDto.setLikes(userLikesPostDtoList);
+            postDto.setParticipants(userLikesPostDtoList);
 
             // Assuming each post can have multiple images, construct URLs for them
             List<String> imageUrls = constructImageUrlsForPost(post.getId());
@@ -226,11 +231,11 @@ public class PostService {
             postDto.setNumberOfComments(post.getComments().size());
             postDto.setCreatedAt(post.getCreatedAt());
 
-            List<UserPostDto> userLikesPostDtoList = postDto.getLikes().stream().peek(user -> {
+            List<UserPostDto> userLikesPostDtoList = postDto.getParticipants().stream().peek(user -> {
                 String userLikeProfileImageUrl = constructImageUrlForUser(user.getId());
                 user.setProfileImage(userLikeProfileImageUrl);
             }).toList();
-            postDto.setLikes(userLikesPostDtoList);
+            postDto.setParticipants(userLikesPostDtoList);
 
             // Assuming each post can have multiple images, construct URLs for them
             List<String> imageUrls = constructImageUrlsForPost(post.getId());
@@ -258,10 +263,10 @@ public class PostService {
 
         User likingUser = userService.findById(userId);
 
-        Set<User> likedPosts = post.getUserLikes();
+        Set<User> likedPosts = post.getParticipants();
         if (!likedPosts.contains(likingUser)) {
             likedPosts.add(likingUser);
-            post.setUserLikes(likedPosts);
+            post.setParticipants(likedPosts);
             postRepository.save(post);
 
             // if the current user likes his posts the notification doesn't need to trigger
@@ -279,10 +284,10 @@ public class PostService {
 
         User user = userService.findById(userId);
 
-        Set<User> likedPosts = post.getUserLikes();
+        Set<User> likedPosts = post.getParticipants();
         likedPosts.remove(user);
 
-        post.setUserLikes(likedPosts);
+        post.setParticipants(likedPosts);
         postRepository.save(post);
         return PostDto.fromEntity(post);
     }

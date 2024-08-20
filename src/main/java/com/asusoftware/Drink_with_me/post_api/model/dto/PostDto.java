@@ -1,5 +1,6 @@
 package com.asusoftware.Drink_with_me.post_api.model.dto;
 
+import com.asusoftware.Drink_with_me.location_api.model.dto.LocationDto;
 import com.asusoftware.Drink_with_me.post_api.model.Post;
 import lombok.Builder;
 import lombok.Data;
@@ -17,8 +18,9 @@ public class PostDto {
     private String description;
     //private String imageUrl;
     private LocalDateTime createdAt;
+    private LocationDto location;
     private UserPostDto user;
-    private List<UserPostDto> likes;
+    private List<UserPostDto> participants;
     private int numberOfComments;
     private List<String> imageFilenames;
 
@@ -29,7 +31,8 @@ public class PostDto {
                 //.imageUrl(post.getImageUrl())
                 .createdAt(post.getCreatedAt())
                 .user(UserPostDto.fromEntity(post.getUser()))
-                .likes(post.getUserLikes().stream().map(UserPostDto::fromEntityList).collect(Collectors.toList()))
+                .participants(post.getParticipants().stream().map(UserPostDto::fromEntityList).collect(Collectors.toList()))
+                .location(LocationDto.toDto(post.getLocation()))
                 .build();
     }
 
@@ -39,8 +42,9 @@ public class PostDto {
                 .description(post.getDescription())
                 .createdAt(post.getCreatedAt())
                 .user(UserPostDto.fromEntity(post.getUser()))
-                .likes(post.getUserLikes().stream().map(UserPostDto::fromEntity).collect(Collectors.toList()))
+                .participants(post.getParticipants().stream().map(UserPostDto::fromEntity).collect(Collectors.toList()))
                 .imageFilenames(post.getImageFilenames()) // Add this line
+                .location(LocationDto.toDto(post.getLocation()))
                 .build();
     }
 }
