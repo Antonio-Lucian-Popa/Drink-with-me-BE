@@ -1,6 +1,7 @@
 package com.asusoftware.Drink_with_me.user_api.service;
 
 import com.asusoftware.Drink_with_me.exception.FileStorageException;
+import com.asusoftware.Drink_with_me.security.CustomUserDetails;
 import com.asusoftware.Drink_with_me.security.CustomUserDetailsService;
 import com.asusoftware.Drink_with_me.security.JwtTokenUtil;
 import com.asusoftware.Drink_with_me.user_api.exception.UserNotFoundException;
@@ -123,12 +124,14 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
 
-            User user = (User) authentication.getPrincipal();
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            com.asusoftware.Drink_with_me.user_api.model.User user = userDetails.getUser();
+
             if (!user.getEnabled()) {
                 throw new DisabledException("User account is not activated. Please check your email.");
             }
 
-            final String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(authRequest.getEmail()));
+            final String token = jwtTokenUtil.generateToken(userDetails);
             return token;
         } catch (DisabledException e) {
             throw new DisabledException("User account is not activated. Please check your email.", e);
@@ -136,6 +139,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials", e);
         }
     }
+
 
     public String resendConfirmationEmail(String email) {
         User user = userRepository.findByEmail(email)
