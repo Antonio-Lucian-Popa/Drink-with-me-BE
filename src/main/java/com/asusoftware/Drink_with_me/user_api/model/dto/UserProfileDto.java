@@ -19,11 +19,10 @@ public class UserProfileDto {
     private String email;
     private Date birthday;
     private Gender gender;
+    private String occupation;
     private String livesIn;
-    private long totalPosts;
     private List<UserDto> following;
     private List<UserDto> followers;
-    private boolean userNew;
 
 
     public static UserProfileDto toDto(User user) {
@@ -34,6 +33,7 @@ public class UserProfileDto {
         dto.setEmail(user.getEmail());
         dto.setBirthday(user.getBirthday());
         dto.setGender(user.getGender());
+        dto.setOccupation(user.getOccupation());
         dto.setLivesIn(user.getLivesIn());
         dto.setFollowing(user.getFollowing().stream().map(UserDto::toDto).collect(Collectors.toList()));
         dto.setFollowers(user.getFollowers().stream().map(UserDto::toDto).collect(Collectors.toList()));

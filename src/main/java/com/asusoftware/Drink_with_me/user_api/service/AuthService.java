@@ -10,6 +10,7 @@ import com.asusoftware.Drink_with_me.user_api.model.UserRole;
 import com.asusoftware.Drink_with_me.user_api.model.dto.AuthRequest;
 import com.asusoftware.Drink_with_me.user_api.model.dto.UserDto;
 import com.asusoftware.Drink_with_me.user_api.repository.UserRepository;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.UUID;
 
 @Service
@@ -90,7 +92,7 @@ public class AuthService {
             }
 
             // Generate the confirmation token
-            String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(savedUser.getEmail()));
+            String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(savedUser.getEmail()), savedUser.getId(), new HashMap<>());
 
             // Send the confirmation email
             emailService.sendConfirmationEmail(user.getEmail(), token);
@@ -134,7 +136,7 @@ public class AuthService {
                 throw new DisabledException("User account is not activated. Please check your email.");
             }
 
-            final String token = jwtTokenUtil.generateToken(userDetails);
+            final String token = jwtTokenUtil.generateToken(userDetails, user.getId(), new HashMap<>());
             user.setToken(token);
             userRepository.save(user);
             return token;
@@ -163,7 +165,7 @@ public class AuthService {
         }
 
         // Generați un nou token și trimiteți-l
-        String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(email));
+        String token = jwtTokenUtil.generateToken(userDetailsService.loadUserByUsername(email), user.getId(), new HashMap<>());
         emailService.sendConfirmationEmail(email, token);
 
         return "Confirmation email resent. Please check your email.";

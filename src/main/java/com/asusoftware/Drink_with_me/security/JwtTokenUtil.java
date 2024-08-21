@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -22,10 +24,12 @@ public class JwtTokenUtil {
     private long expirationTime;
 
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, UUID userId, Map<String, Object> extraClaims) {
         try {
+            extraClaims.put("userId", userId);
             return Jwts.builder()
                     .setSubject(userDetails.getUsername())
+                    .setClaims(extraClaims)
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                     .signWith(SignatureAlgorithm.HS512, secret)

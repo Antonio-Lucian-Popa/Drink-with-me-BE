@@ -63,15 +63,9 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        long totalUserPosts = 0;
-
         String profileImageUrl = constructImageUrlForUser(user);
         UserProfileDto userProfileDto = UserProfileDto.toDto(user);
         userProfileDto.setProfileImageUrl(profileImageUrl);
-        totalUserPosts = postRepository.countPostsByUserId(id);
-        userProfileDto.setTotalPosts(totalUserPosts);
-
-
         return userProfileDto;
     }
 
