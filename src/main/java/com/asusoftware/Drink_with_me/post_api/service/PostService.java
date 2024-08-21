@@ -87,6 +87,8 @@ public class PostService {
 
         // Update post details here...
         post.setDescription(updatePostDto.getDescription());
+        Location location = locationRepository.findById(updatePostDto.getLocation()).orElseThrow(EntityNotFoundException::new);
+        post.setLocation(location);
 
         // Handle new images
         if(newImages != null && !newImages.isEmpty()) {
