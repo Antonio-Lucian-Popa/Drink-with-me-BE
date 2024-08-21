@@ -51,6 +51,9 @@ public class User {
     @Column(name = "role")
     private UserRole role;
 
+    @Column(name = "token")
+    private String token;
+
     // Relationship with follower users
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

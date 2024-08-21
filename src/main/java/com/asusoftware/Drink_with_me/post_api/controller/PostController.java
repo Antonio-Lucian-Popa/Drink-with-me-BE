@@ -92,14 +92,14 @@ public class PostController {
         return ResponseEntity.ok(postService.updateExistingPost(postId, userId, updatePostDto, images));
     }
 
-    @PutMapping(path = "/like/{postId}/{userId}")
+    @PutMapping(path = "/participant/{postId}/{userId}")
     public ResponseEntity<PostDto> participantAPost(@PathVariable("postId") UUID postId, @PathVariable("userId") UUID userId) {
-        return ResponseEntity.ok(postService.likePost(postId, userId));
+        return ResponseEntity.ok(postService.participantPost(postId, userId));
     }
 
-    @PutMapping(path = "/unlike/{postId}/{userId}")
+    @PutMapping(path = "/remove-participant/{postId}/{userId}")
     public ResponseEntity<PostDto> unlikePost(@PathVariable("postId") UUID postId, @PathVariable("userId") UUID userId) {
-        return ResponseEntity.ok(postService.unlikePost(postId, userId));
+        return ResponseEntity.ok(postService.removeParticipantPost(postId, userId));
     }
 
     @DeleteMapping(path = "/delete/{id}/{userId}")

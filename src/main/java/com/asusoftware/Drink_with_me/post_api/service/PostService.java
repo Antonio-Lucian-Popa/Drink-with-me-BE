@@ -259,37 +259,37 @@ public class PostService {
     }
 
     @Transactional
-    public PostDto likePost(UUID postId, UUID userId) {
+    public PostDto participantPost(UUID postId, UUID userId) {
         Post post = postRepository.findById(postId).orElseThrow(() ->
                 new PostNotFoundException("Post not found with id: " + postId));
 
-        User likingUser = userService.findById(userId);
+        User participantUser = userService.findById(userId);
 
-        Set<User> likedPosts = post.getParticipants();
-        if (!likedPosts.contains(likingUser)) {
-            likedPosts.add(likingUser);
-            post.setParticipants(likedPosts);
+        Set<User> participants = post.getParticipants();
+        if (!participants.contains(participantUser)) {
+            participants.add(participantUser);
+            post.setParticipants(participants);
             postRepository.save(post);
 
             // if the current user likes his posts the notification doesn't need to trigger
-            if(likingUser.getId() != post.getUser().getId()) {
+            if(participantUser.getId() != post.getUser().getId()) {
                 // Create and save the notification for the post owner
-                notificationService.createNotification(likingUser.getId(), post.getUser().getId(), postId, NotificationType.LIKE);
+                notificationService.createNotification(participantUser.getId(), post.getUser().getId(), postId, NotificationType.PARTICIPANT);
             }
         }
         return PostDto.fromEntity(post);
     }
 
-    public PostDto unlikePost(UUID postId, UUID userId) {
+    public PostDto removeParticipantPost(UUID postId, UUID userId) {
         Post post = postRepository.findById(postId).orElseThrow(() ->
                 new PostNotFoundException("Post not found with id: " + postId));
 
-        User user = userService.findById(userId);
+        User participantToRemove = userService.findById(userId);
 
-        Set<User> likedPosts = post.getParticipants();
-        likedPosts.remove(user);
+        Set<User> participants = post.getParticipants();
+        participants.remove(participantToRemove);
 
-        post.setParticipants(likedPosts);
+        post.setParticipants(participants);
         postRepository.save(post);
         return PostDto.fromEntity(post);
     }

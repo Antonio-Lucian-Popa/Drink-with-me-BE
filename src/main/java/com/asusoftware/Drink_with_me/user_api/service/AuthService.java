@@ -76,6 +76,7 @@ public class AuthService {
             user.setGender(userDto.getGender());
             user.setBirthday(userDto.getBirthday());
             user.setEnabled(false);
+            user.setToken(null);
 
             // Save the user to the database
             User savedUser = userRepository.save(user);
@@ -96,6 +97,8 @@ public class AuthService {
 
             return "User registered successfully. Please check your email for confirmation.";
 
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e.getMessage());
         } catch (Exception e) {
             // Log the exception for debugging purposes
             System.err.println("Error during user registration: " + e.getMessage());
@@ -132,11 +135,21 @@ public class AuthService {
             }
 
             final String token = jwtTokenUtil.generateToken(userDetails);
+            user.setToken(token);
+            userRepository.save(user);
             return token;
         } catch (DisabledException e) {
             throw new DisabledException("User account is not activated. Please check your email.", e);
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Invalid credentials", e);
+        }
+    }
+
+    public void logout(UUID userId, String token) {
+        if (token != null) {
+            User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            user.setToken(null);
+            userRepository.save(user);
         }
     }
 

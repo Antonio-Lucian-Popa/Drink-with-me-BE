@@ -102,6 +102,7 @@ public class NotificationService {
             case LIKE -> "liked";
             case COMMENT -> "commented on";
             case FOLLOW -> "started following";
+            case PARTICIPANT -> "participant";
         };
 
         return switch (type) {

@@ -3,10 +3,13 @@ package com.asusoftware.Drink_with_me.user_api.controller;
 import com.asusoftware.Drink_with_me.user_api.model.dto.AuthRequest;
 import com.asusoftware.Drink_with_me.user_api.model.dto.UserDto;
 import com.asusoftware.Drink_with_me.user_api.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -37,6 +40,22 @@ public class AuthController {
     public ResponseEntity<?> resendConfirmationEmail(@RequestParam("email") String email) {
         String response = authService.resendConfirmationEmail(email);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{userId}/logout")
+    public ResponseEntity<?> logoutUser(@PathVariable(name = "userId") UUID userId, HttpServletRequest request) {
+        String token = extractTokenFromRequest(request);
+        authService.logout(userId, token);
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
+
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     static class AuthResponse {
