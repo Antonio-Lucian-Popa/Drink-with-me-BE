@@ -61,3 +61,6 @@ logging:
   level:
     root: INFO
     com.asusoftware.security: DEBUG  # Replace with your base package name
+
+cors:
+  allowedOrigins: ${FE_URL}

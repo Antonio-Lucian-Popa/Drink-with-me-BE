@@ -28,7 +28,6 @@ CREATE TABLE users (
                        role VARCHAR(20) NOT NULL,
                        occupation VARCHAR(36),
                        lives_in VARCHAR(36),
-                       token VARCHAR(255),
                        enabled BOOLEAN NOT NULL
 );
 

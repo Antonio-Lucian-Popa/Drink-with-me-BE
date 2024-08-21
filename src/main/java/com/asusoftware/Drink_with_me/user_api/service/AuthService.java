@@ -78,7 +78,6 @@ public class AuthService {
             user.setGender(userDto.getGender());
             user.setBirthday(userDto.getBirthday());
             user.setEnabled(false);
-            user.setToken(null);
 
             // Save the user to the database
             User savedUser = userRepository.save(user);
@@ -136,10 +135,7 @@ public class AuthService {
                 throw new DisabledException("User account is not activated. Please check your email.");
             }
 
-            final String token = jwtTokenUtil.generateToken(userDetails, user.getId(), new HashMap<>());
-            user.setToken(token);
-            userRepository.save(user);
-            return token;
+            return jwtTokenUtil.generateToken(userDetails, user.getId(), new HashMap<>());
         } catch (DisabledException e) {
             throw new DisabledException("User account is not activated. Please check your email.", e);
         } catch (BadCredentialsException e) {
@@ -150,8 +146,6 @@ public class AuthService {
     public void logout(UUID userId, String token) {
         if (token != null) {
             User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            user.setToken(null);
-            userRepository.save(user);
         }
     }
 

@@ -18,12 +18,11 @@ public class DrinkWithMeApplication {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")  // Allow all paths
-						.allowedOrigins("*")  // Allow your Angular app
-						.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // Allow these methods
-						.allowedHeaders("*")  // Allow all headers
-						.exposedHeaders("Authorization") // Expose specific headers to the client
-						.allowCredentials(true);  // Allow credentials like cookies
+				registry.addMapping("/**") // Apply to all endpoints
+						.allowedOrigins("http://localhost:4200") // Replace with your frontend URL
+						.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+						.allowedHeaders("*")
+						.allowCredentials(true);
 			}
 		};
 	}
