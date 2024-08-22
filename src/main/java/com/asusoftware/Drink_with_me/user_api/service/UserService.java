@@ -59,12 +59,20 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
-    public UserProfileDto findByIdDto(UUID id) {
-        User user = userRepository.findById(id)
+    public UserProfileDto findByIdDto(UUID profileUserId, UUID currentUserId) {
+        User user = userRepository.findById(profileUserId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         String profileImageUrl = constructImageUrlForUser(user);
-        UserProfileDto userProfileDto = UserProfileDto.toDto(user);
+
+        long followersCount = userRepository.countFollowersByUserId(user.getId());
+        long followingCount = userRepository.countFollowingByUserId(user.getId());
+        boolean isFollowing = false;
+        if (currentUserId != null && !profileUserId.equals(currentUserId)) {
+            isFollowing = userRepository.isUserFollowing(profileUserId, currentUserId);
+        }
+        UserProfileDto userProfileDto = UserProfileDto.toDto(user, followersCount, followingCount);
+        userProfileDto.setFollowing(isFollowing);
         userProfileDto.setProfileImageUrl(profileImageUrl);
         return userProfileDto;
     }

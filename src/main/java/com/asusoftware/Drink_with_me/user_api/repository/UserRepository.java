@@ -39,4 +39,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     @Query("SELECT f FROM User u JOIN u.following f WHERE u.id = :userId")
     List<User> findFollowingByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(f) FROM User u JOIN u.followers f WHERE u.id = :userId")
+    long countFollowersByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(f) FROM User u JOIN u.following f WHERE u.id = :userId")
+    long countFollowingByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(f) > 0 FROM User u JOIN u.followers f WHERE u.id = :profileUserId AND f.id = :currentUserId")
+    boolean isUserFollowing(@Param("profileUserId") UUID profileUserId, @Param("currentUserId") UUID currentUserId);
 }

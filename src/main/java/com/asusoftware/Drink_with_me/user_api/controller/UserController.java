@@ -13,10 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -45,9 +42,15 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserProfile(userId, updatedUserDto, file));
     }
 
-    @GetMapping(path = "/{id}")
-    public ResponseEntity<UserProfileDto> findById(@PathVariable(name = "id") UUID id) {
-        return ResponseEntity.ok(userService.findByIdDto(id));
+    @GetMapping(path = "/{profileUserId}/{currentUserId}")
+    public ResponseEntity<UserProfileDto> findById( @PathVariable(name = "profileUserId") UUID profileUserId,
+                                                    @PathVariable(name = "currentUserId", required = false) UUID currentUserId) {
+        return ResponseEntity.ok(userService.findByIdDto(profileUserId, currentUserId));
+    }
+
+    @GetMapping(path = "/{profileUserId}")
+    public ResponseEntity<UserProfileDto> findById( @PathVariable(name = "profileUserId") UUID profileUserId) {
+        return ResponseEntity.ok(userService.findByIdDto(profileUserId, null));
     }
 
     @GetMapping("/suggested-users/{userId}")

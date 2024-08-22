@@ -21,11 +21,12 @@ public class UserProfileDto {
     private Gender gender;
     private String occupation;
     private String livesIn;
-    private List<UserDto> following;
-    private List<UserDto> followers;
+    private long followingCount;
+    private long followersCount;
+    private boolean isFollowing;
 
 
-    public static UserProfileDto toDto(User user) {
+    public static UserProfileDto toDto(User user, long followersCount, long followingCount) {
         UserProfileDto dto = new UserProfileDto();
         dto.setId(user.getId());
         dto.setFirstName(user.getFirstName());
@@ -35,8 +36,10 @@ public class UserProfileDto {
         dto.setGender(user.getGender());
         dto.setOccupation(user.getOccupation());
         dto.setLivesIn(user.getLivesIn());
-        dto.setFollowing(user.getFollowing().stream().map(UserDto::toDto).collect(Collectors.toList()));
-        dto.setFollowers(user.getFollowers().stream().map(UserDto::toDto).collect(Collectors.toList()));
+       // dto.setFollowing(user.getFollowing().stream().map(UserDto::toDto).collect(Collectors.toList()));
+       // dto.setFollowers(user.getFollowers().stream().map(UserDto::toDto).collect(Collectors.toList()));
+        dto.setFollowersCount(followersCount);
+        dto.setFollowingCount(followingCount);
         return dto;
     }
 }
