@@ -20,7 +20,9 @@ public class PostDto {
     private LocalDateTime createdAt;
     private LocationDto location;
     private UserPostDto user;
-    private List<UserPostDto> participants;
+   // private int participants;
+    private long participantsCount;
+    private boolean isParticipated;
     private int numberOfComments;
     private List<String> imageFilenames;
 
@@ -31,7 +33,7 @@ public class PostDto {
                 //.imageUrl(post.getImageUrl())
                 .createdAt(post.getCreatedAt())
                 .user(UserPostDto.fromEntity(post.getUser()))
-                .participants(post.getParticipants().stream().map(UserPostDto::fromEntityList).collect(Collectors.toList()))
+               // .participants(post.getParticipants().stream().map(UserPostDto::fromEntityList).collect(Collectors.toList()))
                 .location(LocationDto.toDto(post.getLocation()))
                 .build();
     }
@@ -42,9 +44,23 @@ public class PostDto {
                 .description(post.getDescription())
                 .createdAt(post.getCreatedAt())
                 .user(UserPostDto.fromEntity(post.getUser()))
-                .participants(post.getParticipants().stream().map(UserPostDto::fromEntity).collect(Collectors.toList()))
+               // .participants(post.getParticipants().stream().map(UserPostDto::fromEntity).collect(Collectors.toList()))
                 .imageFilenames(post.getImageFilenames()) // Add this line
                 .location(LocationDto.toDto(post.getLocation()))
+                .build();
+    }
+
+    public static PostDto fromEntity(Post post, long participantsCount, boolean isParticipated) {
+        return PostDto.builder()
+                .id(post.getId())
+                .description(post.getDescription())
+                .createdAt(post.getCreatedAt())
+                .user(UserPostDto.fromEntity(post.getUser()))
+                .location(LocationDto.toDto(post.getLocation()))
+                .imageFilenames(post.getImageFilenames())
+                .numberOfComments(post.getComments().size())
+                .participantsCount(participantsCount)
+                .isParticipated(isParticipated)
                 .build();
     }
 }

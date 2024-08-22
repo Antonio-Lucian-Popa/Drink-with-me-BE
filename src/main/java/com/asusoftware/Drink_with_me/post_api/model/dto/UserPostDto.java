@@ -13,14 +13,14 @@ public class UserPostDto {
     private UUID id;
     private String firstName;
     private String lastName;
-    private String profileImage;
+    private String profileImageUrl;
 
     public static UserPostDto fromEntity(User user) {
         return UserPostDto.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .profileImage(user.getProfileImage())
+                .profileImageUrl(user.getProfileImage())
                 .build();
     }
 
@@ -29,7 +29,7 @@ public class UserPostDto {
                 .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .profileImage(user.getProfileImage())
+                .profileImageUrl(user.getProfileImage())
                 .build();
     }
 }

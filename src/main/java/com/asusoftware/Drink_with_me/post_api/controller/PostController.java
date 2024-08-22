@@ -59,7 +59,7 @@ public class PostController {
         } else if (includeFollowing) {
             postDtos = postService.findAllFollowingUsersPosts(userId, pageable);
         } else {
-            postDtos = postService.findPostsByUserId(userId, pageable);
+            postDtos = postService.findPosts(userId, pageable);
         }
         return ResponseEntity.ok(postDtos);
     }

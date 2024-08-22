@@ -17,13 +17,13 @@ import com.asusoftware.Drink_with_me.post_api.repository.PostRepository;
 import com.asusoftware.Drink_with_me.user_api.model.User;
 import com.asusoftware.Drink_with_me.user_api.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -108,7 +108,7 @@ public class PostService {
 
         // Construct PostDto...
         PostDto postDto = PostDto.fromEntity(post);
-        postDto.getUser().setProfileImage(constructImageUrlForUser(post.getUser().getId()));
+        postDto.getUser().setProfileImageUrl(constructImageUrlForUser(post.getUser().getId()));
         // Assuming constructImageUrlsForPost is adapted to handle a list of filenames and construct URLs
         List<String> imageUrls = constructImageUrlsForPost(post.getId());
         postDto.setImageFilenames(imageUrls);
@@ -116,6 +116,7 @@ public class PostService {
         return postDto;
     }
 
+    @Transactional(readOnly = true)
     public Page<PostDto> findPostsByLocation(UUID countyId, UUID cityId, Pageable pageable) {
         // Fetch the county by ID, throw exception if not found
         County county = countyRepository.findById(countyId)
@@ -126,11 +127,24 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("Location not found in the specified county"));
 
         // Find posts by location and return a paginated list of PostDto
-        return postRepository.findByLocation(location, pageable)
+        return postRepository.findPostsWithParticipantsCountByLocation(location.getId(), pageable)
                 .map(PostDto::fromEntity);
     }
 
+    @Transactional(readOnly = true)
+    public Page<PostDto> findPosts(UUID userId, Pageable pageable) {
+        return postRepository.findAll(pageable)
+                .map(post -> {
+                    String userProfileImageUrl = constructImageUrlForUser(post.getUser().getId());
+                    post.getUser().setProfileImage(userProfileImageUrl);
 
+                    // Verificăm dacă utilizatorul conectat a participat la postare
+                    boolean isParticipated = post.getParticipants().stream()
+                            .anyMatch(participant -> participant.getId().equals(userId));
+
+                    return PostDto.fromEntity(post, post.getParticipants().size(), isParticipated);
+                });
+    }
 
     private String saveImage(MultipartFile file, UUID postId) {
         if (file.isEmpty()) {
@@ -175,18 +189,24 @@ public class PostService {
             UserPostDto userPostDto = UserPostDto.fromEntity(post.getUser());
 
             String userProfileImageUrl = constructImageUrlForUser(post.getUser().getId());
-            userPostDto.setProfileImage(userProfileImageUrl); // Set user's profile image URL
+            userPostDto.setProfileImageUrl(userProfileImageUrl); // Set user's profile image URL
 
             PostDto postDto = PostDto.fromEntity(post);
             postDto.setUser(userPostDto);
             postDto.setNumberOfComments(post.getComments().size());
             postDto.setCreatedAt(post.getCreatedAt());
 
-            List<UserPostDto> userLikesPostDtoList = postDto.getParticipants().stream().peek(user -> {
+            // Verificăm dacă utilizatorul conectat a participat la postare
+            boolean isParticipated = post.getParticipants().stream()
+                    .anyMatch(participant -> participant.getId().equals(userId));
+            postDto.setParticipated(isParticipated);
+            postDto.setParticipantsCount(post.getParticipants().size());
+
+         /*   List<UserPostDto> userLikesPostDtoList = postDto.getParticipants().stream().peek(user -> {
                 String userLikeProfileImageUrl = constructImageUrlForUser(user.getId());
-                user.setProfileImage(userLikeProfileImageUrl);
+                user.setProfileImageUrl(userLikeProfileImageUrl);
             }).toList();
-            postDto.setParticipants(userLikesPostDtoList);
+            postDto.setParticipants(userLikesPostDtoList); */
 
             // Assuming each post can have multiple images, construct URLs for them
             List<String> imageUrls = constructImageUrlsForPost(post.getId());
@@ -244,18 +264,23 @@ public class PostService {
 
             // Construct the URL for the user's profile image
             String userProfileImageUrl = constructImageUrlForUser(post.getUser().getId());
-            userPostDto.setProfileImage(userProfileImageUrl);
+            userPostDto.setProfileImageUrl(userProfileImageUrl);
 
             PostDto postDto = PostDto.fromEntity(post);
             postDto.setUser(userPostDto);
             postDto.setNumberOfComments(post.getComments().size());
             postDto.setCreatedAt(post.getCreatedAt());
-
+            // Verificăm dacă utilizatorul conectat a participat la postare
+            boolean isParticipated = post.getParticipants().stream()
+                    .anyMatch(participant -> participant.getId().equals(userId));
+            postDto.setParticipated(isParticipated);
+            postDto.setParticipantsCount(post.getParticipants().size());
+/*
             List<UserPostDto> userLikesPostDtoList = postDto.getParticipants().stream().peek(user -> {
                 String userLikeProfileImageUrl = constructImageUrlForUser(user.getId());
-                user.setProfileImage(userLikeProfileImageUrl);
+                user.setProfileImageUrl(userLikeProfileImageUrl);
             }).toList();
-            postDto.setParticipants(userLikesPostDtoList);
+            postDto.setParticipants(userLikesPostDtoList); */
 
             // Assuming each post can have multiple images, construct URLs for them
             List<String> imageUrls = constructImageUrlsForPost(post.getId());
@@ -295,7 +320,11 @@ public class PostService {
                 notificationService.createNotification(participantUser.getId(), post.getUser().getId(), postId, NotificationType.PARTICIPANT);
             }
         }
-        return PostDto.fromEntity(post);
+        long participantsCount = post.getParticipants().size();
+        // Verificăm dacă utilizatorul conectat a participat la postare
+        boolean isParticipated = post.getParticipants().stream()
+                .anyMatch(participant -> participant.getId().equals(userId));
+        return PostDto.fromEntity(post, participantsCount, isParticipated);
     }
 
     public PostDto removeParticipantPost(UUID postId, UUID userId) {
@@ -309,7 +338,11 @@ public class PostService {
 
         post.setParticipants(participants);
         postRepository.save(post);
-        return PostDto.fromEntity(post);
+        long participantsCount = post.getParticipants().size();
+        // Verificăm dacă utilizatorul conectat a participat la postare
+        boolean isParticipated = post.getParticipants().stream()
+                .anyMatch(participant -> participant.getId().equals(userId));
+        return PostDto.fromEntity(post, participantsCount, isParticipated);
     }
 
     @Transactional
@@ -363,7 +396,7 @@ public class PostService {
         Post post = postRepository.findById(id) .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found with ID: " + id));
         PostDto postDto = PostDto.fromEntity(post);
         UserPostDto userDto = postDto.getUser();
-        userDto.setProfileImage(constructImageUrlForUser(userDto.getId()));
+        userDto.setProfileImageUrl(constructImageUrlForUser(userDto.getId()));
         postDto.setUser(userDto);
         List<String> images = constructImageUrlsForPost(id);
         postDto.setImageFilenames(images);
@@ -371,14 +404,6 @@ public class PostService {
         return postDto;
     }
 
-//    public List<String> getImageUrlsByUser(UUID userId) {
-//        return postRepository.findByUserId(userId)
-//                .stream()
-//                .flatMap(post -> constructImageUrlsForPost(post.getId()).stream())
-//                .sorted(Comparator.comparing(String::toString).reversed()) // Sort by image URL (or another criteria)
-//                .limit(4) // Limit to the last 4 images
-//                .collect(Collectors.toList());
-//    }
 
     public List<PostImageDto> getImageUrlsByUser(UUID userId) {
         return postRepository.findPostsByUserId(userId)

@@ -41,4 +41,15 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByLocation(Location location, Pageable pageable);
 
+    @Query("SELECT p " +
+            "FROM Post p LEFT JOIN FETCH p.participants participants " +
+            "WHERE p.location.id = :locationId " +
+            "GROUP BY p.id")
+    Page<Post> findPostsWithParticipantsCountByLocation(@Param("locationId") UUID locationId, Pageable pageable);
+
+    @Query("SELECT p " +
+            "FROM Post p LEFT JOIN FETCH p.participants participants " +
+            "GROUP BY p.id")
+    Page<Post> findAllPosts(Pageable pageable);
+
 }
