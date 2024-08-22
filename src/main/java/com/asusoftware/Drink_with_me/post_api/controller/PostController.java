@@ -47,18 +47,23 @@ public class PostController {
             @PathVariable("userId") UUID userId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "includeFollowing", defaultValue = "false") boolean includeFollowing) {
+            @RequestParam(value = "includeFollowing", defaultValue = "false") boolean includeFollowing,
+            @RequestParam(value = "county", required = false) UUID county,
+            @RequestParam(value = "city", required = false) UUID city) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<PostDto> postDtos;
 
-        if (includeFollowing) {
+        if (county != null && city != null) {
+            postDtos = postService.findPostsByLocation(county, city, pageable);
+        } else if (includeFollowing) {
             postDtos = postService.findAllFollowingUsersPosts(userId, pageable);
         } else {
             postDtos = postService.findPostsByUserId(userId, pageable);
         }
         return ResponseEntity.ok(postDtos);
     }
+
 
     @GetMapping("/find-post/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable(name = "id") UUID id) {

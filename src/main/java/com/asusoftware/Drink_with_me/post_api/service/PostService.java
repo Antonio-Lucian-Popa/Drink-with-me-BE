@@ -1,5 +1,7 @@
 package com.asusoftware.Drink_with_me.post_api.service;
 
+import com.asusoftware.Drink_with_me.location_api.model.County;
+import com.asusoftware.Drink_with_me.location_api.repository.CountyRepository;
 import com.asusoftware.Drink_with_me.notification_api.model.NotificationType;
 import com.asusoftware.Drink_with_me.notification_api.service.NotificationService;
 import com.asusoftware.Drink_with_me.post_api.exception.PostNotFoundException;
@@ -49,6 +51,7 @@ public class PostService {
     private final UserService userService;
     private final NotificationService notificationService;
     private final LocationRepository locationRepository;
+    private final CountyRepository countyRepository;
 
     @Transactional
     public PostDto createPostWithImages(UUID userId, CreatePostDto createPostDto, List<MultipartFile> files) {
@@ -112,6 +115,21 @@ public class PostService {
 
         return postDto;
     }
+
+    public Page<PostDto> findPostsByLocation(UUID countyId, UUID cityId, Pageable pageable) {
+        // Fetch the county by ID, throw exception if not found
+        County county = countyRepository.findById(countyId)
+                .orElseThrow(() -> new RuntimeException("County not found"));
+
+        // Fetch the location by city ID and county, throw exception if not found
+        Location location = locationRepository.findByIdAndCounty(cityId, county)
+                .orElseThrow(() -> new RuntimeException("Location not found in the specified county"));
+
+        // Find posts by location and return a paginated list of PostDto
+        return postRepository.findByLocation(location, pageable)
+                .map(PostDto::fromEntity);
+    }
+
 
 
     private String saveImage(MultipartFile file, UUID postId) {

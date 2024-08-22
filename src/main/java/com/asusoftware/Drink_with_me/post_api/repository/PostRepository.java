@@ -1,5 +1,6 @@
 package com.asusoftware.Drink_with_me.post_api.repository;
 
+import com.asusoftware.Drink_with_me.location_api.model.Location;
 import com.asusoftware.Drink_with_me.post_api.model.Post;
 
 import org.springframework.data.domain.Page;
@@ -35,5 +36,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("SELECT p FROM Post p WHERE p.user.id = :userId ORDER BY p.createdAt DESC")
     List<Post> findPostsByUserId(@Param("userId") UUID userId);
+
+    Page<Post> findByUserIdAndLocation(UUID userId, Location location, Pageable pageable);
+
+    Page<Post> findByLocation(Location location, Pageable pageable);
 
 }
